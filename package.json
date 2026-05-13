@@ -1,0 +1,26 @@
+{
+  "name": "betpawa-cli",
+  "version": "0.1.0",
+  "description": "Read-only BetPawa Uganda CLI for games, fixtures, odds, and live results.",
+  "type": "module",
+  "bin": {
+    "betpawa": "./bin/betpawa.js"
+  },
+  "scripts": {
+    "start": "node ./bin/betpawa.js",
+    "check": "node --check ./bin/betpawa.js && node --check ./src/api.js && node --check ./src/format.js && node --check ./src/cli.js"
+  },
+  "keywords": [
+    "betpawa",
+    "sportsbook",
+    "odds",
+    "fixtures",
+    "cli",
+    "uganda"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node ./bin/betpawa.js",
-    "check": "node --check ./bin/betpawa.js && node --check ./src/api.js && node --check ./src/format.js && node --check ./src/cli.js"
+    "check": "node --check ./bin/betpawa.js && node --check ./src/api.js && node --check ./src/format.js && node --check ./src/cli.js",
+    "test": "node --test"
   },
   "keywords": [
     "betpawa",

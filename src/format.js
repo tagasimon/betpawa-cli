@@ -11,19 +11,31 @@ export function printSports(sports) {
   printTable(rows, ["key", "id", "name"]);
 }
 
-export function printFixtures(events) {
+export function printLeagues(leagues, { showDate = false } = {}) {
+  const rows = leagues.map((entry) => ({
+    region: entry.region?.name || "",
+    id: entry.competition?.id || "",
+    league: entry.competition?.name || "",
+    upcoming: showDate ? entry.dayCount?.upcoming || "0" : entry.eventCounts?.upcoming || "0",
+    hot: showDate ? entry.dayCount?.hot || "0" : entry.eventCounts?.hot || "0"
+  }));
+  printTable(rows, ["region", "id", "league", "upcoming", "hot"]);
+}
+
+export function printFixtures(events, { showStats = false } = {}) {
   const rows = events.map((event) => ({
     id: event.id,
     time: formatDate(event.startTime),
     sport: event.category?.name || "",
     competition: joinParts([event.region?.name, event.competition?.name], " / "),
     game: event.name,
-    markets: event.totalMarketCount ?? ""
+    markets: event.totalMarketCount ?? "",
+    stats: formatStats(event.statistics)
   }));
-  printTable(rows, ["id", "time", "sport", "competition", "game", "markets"]);
+  printTable(rows, ["id", "time", "sport", "competition", "game", "markets", ...(showStats ? ["stats"] : [])]);
 }
 
-export function printOdds(events, marketLimit = 3) {
+export function printOdds(events, marketLimit = 3, { showStats = false } = {}) {
   const rows = events.flatMap((event) => {
     const markets = (event.markets || []).slice(0, marketLimit);
     return markets.flatMap((market) => {
@@ -37,11 +49,12 @@ export function printOdds(events, marketLimit = 3) {
         time: formatDate(event.startTime),
         game: event.name,
         market: market.marketType?.displayName || market.marketType?.name || "",
-        odds: selections
+        odds: selections,
+        stats: formatStats(event.statistics)
       };
     });
   });
-  printTable(rows, ["id", "time", "game", "market", "odds"]);
+  printTable(rows, ["id", "time", "game", "market", "odds", ...(showStats ? ["stats"] : [])]);
 }
 
 export function printResults(results, eventsById = new Map()) {
@@ -59,6 +72,25 @@ export function printResults(results, eventsById = new Map()) {
     };
   });
   printTable(rows, ["id", "game", "status", "score"]);
+}
+
+export function printEventStats(statsPayload) {
+  const { event, statistics } = statsPayload;
+  const rows = [{
+    id: event?.id || "",
+    game: event?.name || "",
+    competition: joinParts([event?.region?.name, event?.competition?.name], " / "),
+    available: statistics?.available ? "yes" : "no",
+    provider: statistics?.provider || "",
+    match: statistics?.matchId || "",
+    url: statistics?.url || ""
+  }];
+  printTable(rows, ["id", "game", "competition", "available", "provider", "match", "url"]);
+
+  const score = formatScore(scoreBySide(statistics?.results));
+  if (score) {
+    console.log(`Score: ${score}`);
+  }
 }
 
 export function flattenSelections(market) {
@@ -93,7 +125,7 @@ export function printTable(rows, columns) {
 
   const widths = Object.fromEntries(columns.map((column) => {
     const width = Math.max(column.length, ...rows.map((row) => String(row[column] ?? "").length));
-    return [column, Math.min(width, column === "odds" || column === "game" ? 72 : 32)];
+    return [column, Math.min(width, maxColumnWidth(column))];
   }));
 
   const header = columns.map((column) => pad(column.toUpperCase(), widths[column])).join("  ");
@@ -104,6 +136,19 @@ export function printTable(rows, columns) {
   for (const row of rows) {
     console.log(columns.map((column) => pad(truncate(row[column] ?? "", widths[column]), widths[column])).join("  "));
   }
+}
+
+function maxColumnWidth(column) {
+  if (column === "url") {
+    return 96;
+  }
+  if (column === "odds" || column === "game") {
+    return 72;
+  }
+  if (column === "competition" || column === "league" || column === "stats") {
+    return 48;
+  }
+  return 32;
 }
 
 function formatSelectionName(selection) {
@@ -118,6 +163,19 @@ function formatScore(scores) {
     return "";
   }
   return `${scores.HOME || "0"}-${scores.AWAY || "0"}`;
+}
+
+function formatStats(statistics) {
+  if (!statistics) {
+    return "";
+  }
+  if (statistics.available) {
+    return `${statistics.provider} ${statistics.matchId}`;
+  }
+  if (statistics.matchId) {
+    return `${statistics.provider} ${statistics.matchId} (live)`;
+  }
+  return "none";
 }
 
 function formatDate(value) {

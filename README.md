@@ -16,6 +16,7 @@ For local development without a global install:
 
 ```bash
 node ./bin/betpawa.js fixtures --sport football --limit 5
+node ./bin/betpawa.js fixtures --sport football --country uk --date today --limit 5
 ```
 
 ## Commands
@@ -31,14 +32,33 @@ Fixtures:
 ```bash
 betpawa fixtures --sport football --limit 10
 betpawa fixtures --sport tennis --live --limit 10
+betpawa fixtures --sport football --country uk --date 2026-05-17 --limit 10
+betpawa fixtures --sport football --country england --league "Premier League" --date today --stats
 ```
 
 Odds:
 
 ```bash
 betpawa odds --sport football --limit 5
+betpawa odds --sport football --country uk --date tomorrow --stats --limit 5
 betpawa event 34972637
 ```
+
+Leagues by country or date:
+
+```bash
+betpawa leagues --sport football --country uk
+betpawa leagues --sport football --country uk --date today
+```
+
+Event Statistics:
+
+```bash
+betpawa stats 34972637
+betpawa stats 34972637 --json
+```
+
+Statistics output includes reliable BetPawa-native event data plus Sportradar StatsHub metadata when BetPawa exposes it: availability, provider, match ID, StatsHub URL, scoreboard, native results, participants, and widgets. It does not scrape the full Sportradar HTML app.
 
 Results/live scores:
 
@@ -50,6 +70,7 @@ JSON output for Codex or scripts:
 
 ```bash
 betpawa fixtures --sport football --limit 10 --json
+betpawa fixtures --sport football --country uk --date today --stats --json
 betpawa odds --sport football --limit 3 --json
 betpawa results --json
 ```
@@ -60,6 +81,10 @@ After installing globally with `npm install -g .`, ask Codex to run commands lik
 
 ```text
 Run `betpawa fixtures --sport football --limit 10 --json` and summarize the next fixtures.
+```
+
+```text
+Run `betpawa fixtures --sport football --country uk --date today --stats --json` and summarize fixtures with available statistics links.
 ```
 
 ```text
@@ -74,6 +99,14 @@ Codex can also run it directly from the repo:
 
 ```bash
 node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js fixtures --sport football --limit 10 --json
+```
+
+Country/date examples:
+
+```bash
+node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js leagues --sport football --country uk
+node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js fixtures --sport football --country uk --date today --stats --json
+node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js odds --sport football --country england --league "Premier League" --date tomorrow --json
 ```
 
 ## Configuration

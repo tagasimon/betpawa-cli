@@ -74,6 +74,30 @@ export function printResults(results, eventsById = new Map()) {
   printTable(rows, ["id", "game", "status", "score"]);
 }
 
+export function printGoalPredictions(payload) {
+  const rows = (payload.predictions || []).map((prediction) => ({
+    rank: prediction.rank,
+    time: formatDate(prediction.startTime),
+    fixture: prediction.fixture,
+    competition: prediction.competition,
+    xGoals: prediction.expectedGoals.toFixed(1),
+    dixon: formatModelGoals(prediction.model?.estimates?.dixonColes),
+    bayes: formatModelGoals(prediction.model?.estimates?.bayesian),
+    confidence: prediction.confidence
+  }));
+  printTable(rows, ["rank", "time", "fixture", "competition", "xGoals", "dixon", "bayes", "confidence"]);
+  console.log("Note: goal estimates are statistical and uncertain; outcomes are not guaranteed.");
+  if (payload.summary?.fallback) {
+    console.log(`No fixtures met the strict filters, so showing the best lower-confidence predictions instead.`);
+  }
+  if (payload.filtered?.length) {
+    console.log(`Filtered ${payload.filtered.length} lower-confidence or under-threshold fixture(s).`);
+  }
+  if (payload.skipped?.length) {
+    console.log(`Skipped ${payload.skipped.length} fixture(s) without enough historical data.`);
+  }
+}
+
 export function printEventStats(statsPayload) {
   const { event, statistics } = statsPayload;
   const rows = [{
@@ -145,6 +169,9 @@ function maxColumnWidth(column) {
   if (column === "odds" || column === "game") {
     return 72;
   }
+  if (column === "fixture") {
+    return 64;
+  }
   if (column === "competition" || column === "league" || column === "stats") {
     return 48;
   }
@@ -187,6 +214,10 @@ function formatDate(value) {
     timeStyle: "short",
     timeZone: process.env.TZ || "Africa/Kampala"
   }).format(new Date(value));
+}
+
+function formatModelGoals(model) {
+  return Number.isFinite(model?.totalGoals) ? model.totalGoals.toFixed(1) : "";
 }
 
 function joinParts(parts, separator) {

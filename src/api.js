@@ -163,16 +163,22 @@ export class BetPawaClient {
   }
 
   async requestJson(path) {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "X-Pawa-Brand": this.brand,
-        "X-Pawa-Language": this.language,
-        deviceType: "desktop",
-        traceId: `betpawa-cli-${Date.now()}`
-      }
-    });
+    const url = `${this.baseUrl}${path}`;
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Pawa-Brand": this.brand,
+          "X-Pawa-Language": this.language,
+          deviceType: "desktop",
+          traceId: `betpawa-cli-${Date.now()}`
+        }
+      });
+    } catch (error) {
+      throw new Error(`failed to fetch BetPawa data from ${url}: ${error.message}`);
+    }
 
     const text = await response.text();
     let body;

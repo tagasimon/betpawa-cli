@@ -44,6 +44,24 @@ betpawa odds --sport football --country uk --date tomorrow --stats --limit 5
 betpawa event 34972637
 ```
 
+Goal predictions:
+
+```bash
+betpawa predict-goals --country uk --date today --limit 20
+betpawa predict-goals --date today
+betpawa predict-goals --country england --league "Premier League" --date today --json
+betpawa predict-goals --date today --min-goals 2 --min-confidence high
+```
+
+`predict-goals` is read-only. It ranks football fixtures by estimated total goals using BetPawa public fixture data, public event statistics where available, open historical CSV data from Football-Data.co.uk as a fallback, and goal-market odds as a supporting signal. By default it only returns high-confidence predictions with at least 2.0 expected goals. Country or league filters improve historical-data coverage.
+
+When open historical data is available, the table includes two stronger model estimates:
+
+- `DIXON`: time-decayed Dixon-Coles-style attack/defense Poisson estimate.
+- `BAYES`: Bayesian-shrinkage attack/defense Poisson estimate.
+
+The command prints statistical estimates only. Outcomes are uncertain and not guaranteed.
+
 Leagues by country or date:
 
 ```bash
@@ -73,6 +91,7 @@ betpawa fixtures --sport football --limit 10 --json
 betpawa fixtures --sport football --country uk --date today --stats --json
 betpawa odds --sport football --limit 3 --json
 betpawa results --json
+betpawa predict-goals --country uk --date today --limit 10 --json
 ```
 
 ## Use In Codex
@@ -107,6 +126,7 @@ Country/date examples:
 node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js leagues --sport football --country uk
 node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js fixtures --sport football --country uk --date today --stats --json
 node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js odds --sport football --country england --league "Premier League" --date tomorrow --json
+node /Users/kazoobasimon/Code/betpawa-cli/bin/betpawa.js predict-goals --country england --league "Premier League" --date today
 ```
 
 ## Configuration

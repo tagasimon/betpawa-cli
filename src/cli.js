@@ -1,5 +1,6 @@
 import { BetPawaClient, SPORTS } from "./api.js";
-import { printEventStats, printFixtures, printJson, printLeagues, printOdds, printResults, printSports } from "./format.js";
+import { printEventStats, printFixtures, printGoalPredictions, printJson, printLeagues, printOdds, printResults, printSports } from "./format.js";
+import { predictGoals } from "./predict.js";
 
 const HELP = `betpawa - read-only BetPawa Uganda CLI
 
@@ -7,6 +8,7 @@ Usage:
   betpawa games [--json]
   betpawa leagues [--sport football] [--country uk] [--date today] [--json]
   betpawa fixtures [--sport football] [--country uk] [--league "Premier League"] [--date today] [--limit 20] [--live] [--stats] [--json]
+  betpawa predict-goals [--country uk] [--league "Premier League"] [--date today] [--limit 20] [--min-goals 2] [--min-confidence high] [--json]
   betpawa odds [--sport football] [--country uk] [--league "Premier League"] [--date today] [--limit 10] [--markets 3] [--stats] [--json]
   betpawa results [--limit 20] [--json]
   betpawa event <event-id> [--json]
@@ -19,8 +21,11 @@ Options:
   --date <date>    YYYY-MM-DD, today, or tomorrow
   --limit <n>      number of rows to request
   --offset <n>     number of fixture rows to skip
+  --min-goals <n>  minimum expected goals for predict-goals, default 2
+  --min-confidence <level> low, medium, or high; default high
   --stats          include Event Statistics metadata and summary
   --live           use live events instead of upcoming events
+  --no-browser     disable browser fallback for public event statistics
   --json           print raw JSON
   --base-url <url> override https://www.betpawa.ug
 
@@ -28,9 +33,9 @@ Environment:
   BETPAWA_BASE_URL, BETPAWA_BRAND, BETPAWA_LANGUAGE
 `;
 
-export async function run(argv) {
+export async function run(argv, dependencies = {}) {
   const { command, positionals, flags } = parseArgs(argv);
-  const client = new BetPawaClient({ baseUrl: flags.baseUrl });
+  const client = dependencies.client || new BetPawaClient({ baseUrl: flags.baseUrl });
 
   if (!command || flags.help || command === "help") {
     console.log(HELP);
@@ -64,6 +69,22 @@ export async function run(argv) {
       events = await client.addStatisticsForEvents(events);
     }
     return flags.json ? printJson(events) : printFixtures(events, { showStats: flags.stats });
+  }
+
+  if (command === "predict-goals") {
+    const predict = dependencies.predictGoals || predictGoals;
+    const predictions = await predict({
+      client,
+      sport: flags.sport || "football",
+      country: flags.country,
+      league: flags.league,
+      date: flags.date || "today",
+      limit: numberFlag(flags.limit, 20),
+      minExpectedGoals: numberFlag(flags.minGoals, 2),
+      minConfidence: flags.minConfidence || "high",
+      useBrowser: !flags.noBrowser
+    });
+    return flags.json ? printJson(predictions) : printGoalPredictions(predictions);
   }
 
   if (command === "odds") {
@@ -119,7 +140,7 @@ function parseArgs(argv) {
 
     const [rawKey, inlineValue] = arg.slice(2).split("=", 2);
     const key = toCamel(rawKey);
-    if (["json", "live", "help", "stats"].includes(key)) {
+    if (["json", "live", "help", "stats", "noBrowser"].includes(key)) {
       flags[key] = true;
       continue;
     }
